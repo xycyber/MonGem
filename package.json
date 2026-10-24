@@ -1,5 +1,5 @@
 {
-  "name": "ludo-arena",
+  "name": "mongem",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,7 +11,8 @@
   "dependencies": {
     "next": "16.4.3",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "viem": "^2.57.11"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

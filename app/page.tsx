@@ -1,69 +1,138 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+/* ============================================================================
+ * Landing + login MetaMask ("/"). Setelah login → /games.
+ * ========================================================================== */
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useWallet } from "@/app/providers";
+import { Logo } from "@/components/site-header";
+import { ArenaStatsGrid } from "@/components/arena-stats";
+import { Btn, btnClass } from "@/components/ui";
+import { useArenaStats } from "@/lib/use-arena-stats";
+import { CONTRACT_ADDRESS, EXPLORER } from "@/lib/arena";
+
+const FEATURES = [
+  {
+    icon: "🔒",
+    title: "Prize pool dijaga kontrak",
+    text: "Tiket masuk semua pemain disimpan smart contract, bukan server.",
+  },
+  {
+    icon: "🎲",
+    title: "Dadu & pemenang on-chain",
+    text: "Kontrak yang melempar dadu dan mencatat urutan finish.",
+  },
+  {
+    icon: "⚡",
+    title: "Hadiah langsung cair",
+    text: "Juara dibayar di transaksi yang sama dengan lemparan terakhir.",
+  },
+];
+
+export default function Landing() {
+  const w = useWallet();
+  const router = useRouter();
+  const stats = useArenaStats();
+
+  const onLogin = async () => {
+    if (await w.login()) router.push("/games");
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-10 pt-4 sm:pb-16">
+      {!w.address && (
+        <nav className="flex items-center justify-between gap-3 py-1">
+          <Logo />
+          <Btn
+            variant="accent"
+            onClick={onLogin}
+            disabled={!!w.busy}
+            className="shrink-0"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
+            <span
+              title="Setelah login, transaksi game ditandatangani session wallet di browser ini, jadi tidak ada popup setiap lempar dadu."
+              className="flex items-center gap-2"
+            >
+              🦊
+              {w.busy ? (
+                "Menghubungkan…"
+              ) : (
+                <>
+                  <span className="sm:hidden">Login</span>
+                  <span className="hidden sm:inline">Login dengan MetaMask</span>
+                </>
+              )}
+            </span>
+          </Btn>
+        </nav>
+      )}
+
+      <section className="mt-10 max-w-3xl sm:mt-16">
+        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-500/30">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+          Live di Monad Testnet
+        </span>
+        <h1 className="mt-5 text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+          Game klasik, turnamen on-chain,{" "}
+          <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+            hadiah langsung cair
+          </span>{" "}
+          di Monad.
+        </h1>
+        <p className="mt-5 max-w-2xl text-base text-violet-200/80 sm:text-lg">
+          MonGem adalah platform mini game on-chain di Monad. Game pertamanya
+          Ludo: main bareng teman dalam turnamen on-chain. Setiap pemain membeli
+          tiket masuk dengan MON; kontrak yang menyimpan prize pool, melempar
+          dadu, dan membagikan hadiah ke juara, tanpa server yang bisa curang.
+        </p>
+
+        <div className="mt-8 flex flex-wrap items-center gap-4">
+          {w.address && (
+            <Link href="/games" className={btnClass("big")}>
+              Masuk ke MonGem →
+            </Link>
+          )}
           <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href={`${EXPLORER}/address/${CONTRACT_ADDRESS}`}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noreferrer"
+            className="text-sm text-violet-300 underline-offset-4 hover:text-white hover:underline"
           >
-            Documentation
+            Lihat kontrak di explorer ↗
           </a>
         </div>
-      </main>
-    </div>
+        {!w.address && w.error && (
+          <div className="mt-4 max-w-xl rounded-xl bg-red-500/15 px-4 py-3 text-sm text-red-100 ring-1 ring-red-500/30">
+            {w.error}
+          </div>
+        )}
+      </section>
+
+      <section className="mt-12">
+        <ArenaStatsGrid stats={stats} />
+        <p className="mt-1 text-xs text-violet-300/70">
+          ⚡ Konfirmasi tx terakhir:{" "}
+          <span className="font-semibold tabular-nums text-violet-100">
+            {w.lastSpeed !== null ? `${w.lastSpeed} ms` : "–"}
+          </span>
+          {w.lastSpeed === null && " (muncul setelah transaksi pertamamu)"}
+        </p>
+      </section>
+
+      <section className="mt-12 grid gap-4 sm:grid-cols-3">
+        {FEATURES.map((f) => (
+          <div
+            key={f.title}
+            className="rounded-2xl bg-white/[0.03] p-5 ring-1 ring-white/10"
+          >
+            <div className="text-2xl">{f.icon}</div>
+            <h2 className="mt-3 font-bold">{f.title}</h2>
+            <p className="mt-1 text-sm text-violet-200/70">{f.text}</p>
+          </div>
+        ))}
+      </section>
+    </main>
   );
 }
